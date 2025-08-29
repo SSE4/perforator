@@ -20,3 +20,5 @@ jobs:
         with:
           target_checkout: ./code
           script: build
+          service_account_id: ${{ vars.CLOUD_SERVICE_ACCOUNT_ID }}
+
