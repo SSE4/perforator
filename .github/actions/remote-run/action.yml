@@ -33,7 +33,7 @@ runs:
       id: iam_token
       env:
         ID_TOKEN: ${{ steps.id_token.outputs.token }}
-        SA_ID: ${{ inputs.service_account_id }}
+        SA_ID: ${{ secrets.CLOUD_SERVICE_ACCOUNT_ID }}
       run: |
         IAM_TOKEN=$(curl --fail -sH "Content-Type: application/x-www-form-urlencoded" -d "grant_type=urn:ietf:params:oauth:grant-type:token-exchange&requested_token_type=urn:ietf:params:oauth:token-type:access_token&audience=$SA_ID&subject_token=${ID_TOKEN}&subject_token_type=urn:ietf:params:oauth:token-type:id_token" -X POST https://auth.yandex.cloud/oauth/token | jq -r '.access_token')
         echo "::add-mask::${IAM_TOKEN}"
@@ -42,8 +42,8 @@ runs:
     - name: Create VM and run command
       env:
         IAM_TOKEN: ${{ steps.iam_token.outputs.token }}
-        CREATE_VM_URL: ${{ vars.START_BUILD_FUNCTION_URL }}
-        POLL_VM_URL: ${{ vars.POLL_BUILD_FUNCTION_URL }}
+        CREATE_VM_URL: ${{ secrets.START_BUILD_FUNCTION_URL }}
+        POLL_VM_URL: ${{ secrets.POLL_BUILD_FUNCTION_URL }}
         RUN_ID: ${{ github.run_id }}
         REPO_ID: ${{ github.repository_id }}
         ARCHIVE_PATH: ./code.tar.gz
