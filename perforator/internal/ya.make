@@ -2,6 +2,7 @@ RECURSE(
     asyncfilecache
     asynctask
     buildinfo
+    ci-tools
     linguist
     logfield
     offline_processing

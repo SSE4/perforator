@@ -1,0 +1,51 @@
+name: 'Run command'
+description: 'Executes specified code in a temporary VM'
+inputs:
+  target_checkout:
+    description: 'Path to repository checkout which needs to be executed. It need not be trusted, but argument value itself must not contain weird characters.'
+  script:
+    description: 'Name of script to be executed (perforator/ci/scripts/${script}.sh must be valid path)'
+runs:
+  using: composite
+  steps:
+    - name: Create tarball
+      run: |
+        (cd '${{ inputs.target_checkout }}' && git archive --output=../target.tar.gz HEAD)
+    - name: Obtain ID token
+      # https://docs.github.com/en/actions/how-tos/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-cloud-providers#requesting-the-jwt-using-the-actions-core-toolkit
+      uses: actions/github-script@v7
+      id: id_token
+      with:
+        script: |
+          let id_token = await core.getIDToken('cloud-ci')
+          core.setOutput('token', id_token)
+    - name: Print id token info
+      if: ${{ runner.debug }}
+      env:
+        ID_TOKEN: ${{ steps.id_token.outputs.token }}
+      run: |
+        python3 '${{ github.action_path }}/../../../perforator/ci/id-token-info.py' || echo 'Failed to inspect token'
+    - name: Authenticate in cloud
+      id: iam_token
+      env:
+        ID_TOKEN: ${{ steps.id_token.outputs.token }}
+        SA_ID: ${{ vars.CLOUD_SERVICE_ACCOUNT_ID }}
+      run: |
+        IAM_TOKEN=$(curl --fail -sH "Content-Type: application/x-www-form-urlencoded" -d "grant_type=urn:ietf:params:oauth:grant-type:token-exchange&requested_token_type=urn:ietf:params:oauth:token-type:access_token&audience=$SA_ID&subject_token=${ID_TOKEN}&subject_token_type=urn:ietf:params:oauth:token-type:id_token" -X POST https://auth.yandex.cloud/oauth/token | jq -r '.access_token')
+        echo "::add-mask::${IAM_TOKEN}"
+        echo "token=${IAM_TOKEN}" >> $GITHUB_OUTPUT
+    - name: Create VM and run command
+      env:
+        IAM_TOKEN: ${{ steps.iam_token.outputs.token }}
+        CREATE_VM_URL: ${{ vars.START_BUILD_FUNCTION_URL }}
+        POLL_VM_URL: ${{ vars.POLL_BUILD_FUNCTION_URL }}
+        RUN_ID: ${{ github.run_id }}
+        REPO_ID: ${{ github.repository_id }}
+        ARCHIVE_PATH: ./code.tar.gz
+        SCRIPT_PATH: code/perforator/ci/scripts/${{ inputs.script }}.sh
+        OUT_PATH: out
+        LOCAL_WORK_DIR: work
+      run: |
+        mkdir work
+        (cd './${{ github.action_path }}/../../../perforator/internal/ci-tools' && go build .)
+        './${{ github.action_path }}/../../../perforator/internal/ci-tools/ci-tools'

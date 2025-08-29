@@ -2,24 +2,21 @@ on:
   push:
     branches:
       - main
+      - users/MikailBag/ci-remote/build
+permissions: {} # disable all by default
 jobs:
-  ya:
-   name: Postcommit checks
-   runs-on: [self-hosted, auto-provisioned]
-   steps:
-    - uses: actions/checkout@v4
-    - uses: tespkg/actions-cache@91b54a6e03abb8fcec12d3743633d23a1cfcd269
-      with:
-        endpoint: storage.yandexcloud.net
-        accessKey: ${{ secrets.CACHE_ACCESS_KEY }}
-        secretKey: ${{ secrets.CACHE_SECRET_KEY }}
-        bucket: ${{ secrets.CACHE_BUCKET }}
-        # Don't bother trying github cache, we don't fit in its 10GB limit
-        use-fallback: false
-        key: v1-${{ github.sha }}
-        restore-keys: |
-          v1-
-        path: ~/.ya/build
-    - name: Run ya make
-      run: ./ya test ./perforator -DCI=github --gc -r --musl -DCONSISTENT_BUILD=yes -DCONSISTENT_DEBUG=yes -T
-
+  run-build:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: [self-hosted, auto-provisioned]
+    name: Postcommit checks
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: code
+      - name: Run tests
+        uses: ./code/.github/actions/remote-run
+        with:
+          target_checkout: ./code
+          script: build
