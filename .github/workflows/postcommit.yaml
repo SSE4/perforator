@@ -2,7 +2,7 @@ on:
   push:
     branches:
       - main
-      - users/MikailBag/ci-remote/build
+      - users/MikailBag/ci-remote-build
 permissions: {} # disable all by default
 jobs:
   run-build:
