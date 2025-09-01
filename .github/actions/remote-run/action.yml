@@ -42,7 +42,7 @@ runs:
       id: iam_token
       env:
         ID_TOKEN: ${{ steps.id_token.outputs.token }}
-        SA_ID: ${{ secrets.CLOUD_SERVICE_ACCOUNT_ID }}
+        SA_ID: ${{ inputs.yc_sa_id }}
       run: |
         IAM_TOKEN=$(curl --fail -sH "Content-Type: application/x-www-form-urlencoded" -d "grant_type=urn:ietf:params:oauth:grant-type:token-exchange&requested_token_type=urn:ietf:params:oauth:token-type:access_token&audience=$SA_ID&subject_token=${ID_TOKEN}&subject_token_type=urn:ietf:params:oauth:token-type:id_token" -X POST https://auth.yandex.cloud/oauth/token | jq -r '.access_token')
         echo "::add-mask::${IAM_TOKEN}"
@@ -52,7 +52,7 @@ runs:
       env:
         IAM_TOKEN: ${{ steps.iam_token.outputs.token }}
         CREATE_VM_URL: ${{ inputs.start_function_url }}
-        POLL_VM_URL: ${{ secrets.poll_function_url }}
+        POLL_VM_URL: ${{ inputs.poll_function_url }}
         RUN_ID: ${{ github.run_id }}
         REPO_ID: ${{ github.repository_id }}
         ARCHIVE_PATH: ./code.tar.gz
