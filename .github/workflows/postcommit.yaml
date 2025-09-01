@@ -20,5 +20,6 @@ jobs:
         with:
           target_checkout: ./code
           script: build
-          service_account_id: ${{ vars.CLOUD_SERVICE_ACCOUNT_ID }}
-
+          start_function_url: ${{ secrets.START_BUILD_FUNCTION_URL }}
+          poll_function_url: ${{ secrets.POLL_BUILD_FUNCTION_URL }}
+          yc_sa_id: ${{ secrets.YC_SA_ID }}

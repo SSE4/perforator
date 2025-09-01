@@ -2,11 +2,20 @@ name: 'Run command'
 description: 'Executes specified code in a temporary VM'
 inputs:
   target_checkout:
+    required: true
     description: 'Path to repository checkout which needs to be executed. It need not be trusted, but argument value itself must not contain weird characters.'
   script:
+    required: true
     description: 'Name of script to be executed (perforator/ci/scripts/${script}.sh must be valid path)'
   service_account_id:
+    required: true
     description: 'ID of the YC SA to use'
+  start_function_url:
+    required: true
+    description: 'START_BUILD_FUNCTION_URL var'
+  poll_function_url:
+    required: true
+    description: 'POLL_VM_URL var'
 runs:
   using: composite
   steps:
@@ -42,8 +51,8 @@ runs:
     - name: Create VM and run command
       env:
         IAM_TOKEN: ${{ steps.iam_token.outputs.token }}
-        CREATE_VM_URL: ${{ secrets.START_BUILD_FUNCTION_URL }}
-        POLL_VM_URL: ${{ secrets.POLL_BUILD_FUNCTION_URL }}
+        CREATE_VM_URL: ${{ inputs.start_function_url }}
+        POLL_VM_URL: ${{ secrets.poll_function_url }}
         RUN_ID: ${{ github.run_id }}
         REPO_ID: ${{ github.repository_id }}
         ARCHIVE_PATH: ./code.tar.gz
