@@ -44,7 +44,7 @@ runs:
         ID_TOKEN: ${{ steps.id_token.outputs.token }}
         SA_ID: ${{ inputs.service_account_id }}
       run: |
-        IAM_TOKEN=$(curl --fail -sH "Content-Type: application/x-www-form-urlencoded" -d "grant_type=urn:ietf:params:oauth:grant-type:token-exchange&requested_token_type=urn:ietf:params:oauth:token-type:access_token&audience=$SA_ID&subject_token=${ID_TOKEN}&subject_token_type=urn:ietf:params:oauth:token-type:id_token" -X POST https://auth.yandex.cloud/oauth/token | jq -r '.access_token')
+        IAM_TOKEN=$(curl --fail -sH "Content-Type: application/x-www-form-urlencoded" -d "grant_type=urn:ietf:params:oauth:grant-type:token-exchange&requested_token_type=urn:ietf:params:oauth:token-type:access_token&audience=${SA_ID}&subject_token=${ID_TOKEN}&subject_token_type=urn:ietf:params:oauth:token-type:id_token" -X POST https://auth.yandex.cloud/oauth/token | jq -r '.access_token')
         echo "::add-mask::${IAM_TOKEN}"
         echo "token=${IAM_TOKEN}" >> $GITHUB_OUTPUT
       shell: bash
